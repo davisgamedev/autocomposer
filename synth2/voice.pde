@@ -3,6 +3,9 @@ class Voice{
   Oscil wave;
   float currentAmp = 0f;
   
+  float duration = 0;
+  float left
+  
   float targetAmp;
   float velocityAmp;
   public boolean needsUpdate = false;
@@ -57,5 +60,17 @@ class Voice{
   
   public void play(String pitch){
       wave.setFrequency(Frequency.ofPitch(pitch));
+  }
+  
+  public void play(String pitch, float duration){
+    
+  }
+  
+  public void rest(float duration){
+    
+  }
+  
+  public boolean canPlay(){
+    
   }
 }
