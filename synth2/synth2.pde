@@ -16,16 +16,12 @@ AudioOutput out;
 //TODO make it less jazzy
 
 // Need a unit generator for the oscillator
-Oscil wave;
-ArrayList<Oscil> chordWaves;
+ArrayList<Voice> chordWaves;
+Voice wave;
 
-Float amp; //final amplitude
-Float currentAmp = 0f;
+Time Time = new Time();
+
 String currentPitch = "--";
-float currentBeat = .25;
-boolean isRest = false;
-int measure = 0;
-int lastFrame = -1;
 
 String[] modeNames = new String[]{
   "Ionian",
@@ -80,19 +76,12 @@ void setup()
   out = minim.getLineOut();
   
   // Create a sine wave Oscil object, set to 440 Hz, at 0.25 amplitude
-  wave = new Oscil( 440, 0f, Waves.TRIANGLE );
+  wave = new Voice(out, Waves.TRIANGLE);
   
   chordWaves = new ArrayList();
   for(int i = 0; i < 4; i++){
-    chordWaves.add(new Oscil(440, 0.2, Waves.SINE));
-    chordWaves.get(i).patch(out);
+    chordWaves.add(new Voice(out, Waves.SINE, 0.2));
   }
-  
-  // Patch the Oscil to the output so we can hear it
-  wave.patch( out );
-  
-  //set initial values
-  amp = 0.25f;
   
   notes = new ArrayList();
   
@@ -137,7 +126,7 @@ void draw()
   for( int i = 0; i < width-1; ++i )
   {
     point(i,
-      200/2 - (200*0.49)*wave.getWaveform().value((float)i/width));
+      200/2 - (200*0.49)*wave.wave.getWaveform().value((float)i/width));
   }
   
   
@@ -155,7 +144,7 @@ void draw()
   text("up : amp up", 10, 218);
   text("down : amp down", 10, 233);
   fill(255, 200, 0);
-  text(("current amp : " + String.format("%.2f", amp)), 10, 248);
+  text(("current amp : " + String.format("%.4f", wave.currentAmp)), 10, 248);
 
   //waveforms
   // \t doesn't work for some reason in processing
@@ -171,13 +160,10 @@ void draw()
     text(notes.get(i), width/2 + gap, 233);
   }
   
+  fill(255, 100, 0);
   text("Chord: ", width/2, 248);
-  for(int i = 0; i < chords.get(measure).size(); i++){
-      String n = chords.get(measure).get(i);
-      if(currentPitch.equals(n)){
-        fill(255, 255, 0);
-      }
-      else fill(255, 100, 0);
+  for(int i = 0; i < chords.get(Time.currentMeasure).size(); i++){
+      String n = chords.get(Time.currentMeasure).get(i);
       text(n, 50 + width/2 + (30 * i), 248); 
   }
   
@@ -188,47 +174,39 @@ void draw()
 }
 
 void update(){
-    measure = floor((frameCount % 480)/120);
-     for(int i = 0; i < 4; i++){
-      chordWaves.get(i).setFrequency(Frequency.ofPitch(chords.get(measure).get(i)));
+   
+    Time.updateTime();
+    
+    for(int i = 0; i < 4; i++){
+      chordWaves.get(i).play(chords.get(Time.currentMeasure).get(i));
     }
     
-    if(isRest){
-      if(currentAmp > 0)
-        wave.setAmplitude(currentAmp -= 0.01);
-    }
-    if( frameCount - lastFrame < currentBeat * 60) return;
+    wave.update(Time.deltaBeat);
+    
+    if( !wave.canPlay() ) return;
     //two beats per 60 frames (120 bpm), one measure = 120 frames
     
-    lastFrame = frameCount;
-    
-    currentBeat = map(
+    float newBeat = map(
       random(0, 1),
       0,
       1,
-      1/24,
+      1/16,
       1
     );
-    if( random(0, 1) > 0.9){
-      isRest = true;
+    if( random(0, 1) > 0.4){
+      wave.rest(newBeat, 0.001);
       return;
     }
     
-    wave.setAmplitude(amp);
-    currentAmp = amp;
-    isRest = false;
-    
+    wave.targetAmp(0.25, 0.01);
     
     //currentPitch = chords.get(measure).get(;
-    int currentChordNote = notes.indexOf(chords.get(measure).get(floor(random(0, 4))));
+    int currentChordNote = notes.indexOf(chords.get(Time.currentMeasure).get(floor(random(0, 4))));
     currentChordNote += map(randomGaussian(), -5, 5, -3, 3);
     if(currentChordNote < 0) currentChordNote = 0;
     currentChordNote %= notes.size();
     currentPitch = notes.get(currentChordNote);
-    
-    wave.setFrequency(
-      Frequency.ofPitch(currentPitch)
-    );
+    wave.play(currentPitch, newBeat);
 }
 
 
@@ -238,33 +216,26 @@ void keyPressed()
 { 
     switch(keyCode){
       ////////set amp/////////
-      case UP:
-        amp += 0.01;
-        break;
-      case DOWN:
-        amp -= 0.01;
-        break;
-        
       default: break;
     }
     switch(key){
      case '1': 
-      wave.setWaveform( Waves.SINE );
+      wave.wave.setWaveform( Waves.SINE );
       break;
     case '2':
-      wave.setWaveform( Waves.TRIANGLE );
+      wave.wave.setWaveform( Waves.TRIANGLE );
       break;
     case '3':
-      wave.setWaveform( Waves.SAW );
+      wave.wave.setWaveform( Waves.SAW );
       break;
     case '4':
-      wave.setWaveform( Waves.SQUARE );
+      wave.wave.setWaveform( Waves.SQUARE );
       break; 
     case '5':
-      wave.setWaveform( Waves.QUARTERPULSE );
+      wave.wave.setWaveform( Waves.QUARTERPULSE );
       break;
     case '6':
-      wave.setWaveform( Waves.PHASOR );
+      wave.wave.setWaveform( Waves.PHASOR );
       break;
     }
   }
