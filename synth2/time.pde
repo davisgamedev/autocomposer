@@ -7,22 +7,25 @@ class Time {
   float currentBeat = 0f; //the current beat in the current measure
   int currentMeasure = 0; //current measure in section
   int quarterBeat = 0; //current rounded quarter beat
+  float deltaBeat = 0f; //ellapsed amount of time between frames in terms of beat
 
   int BPM = 120; //beats per minute
   long lastTime = System.currentTimeMillis();
   float ellapsedTime;
 
   void updateTime() {
-    long currentTime = System.currentTimeMillis() - lastTime;
-    ellapsedTime = currentTime/1000;
-    currentBeat += (ellapsedTime/(BPM/60));
-    if (currentBeat >= 5) {
+    long currentTime = System.currentTimeMillis();
+    ellapsedTime = (currentTime - lastTime)/1000f;
+    deltaBeat = (ellapsedTime/(BPM/60f));
+    currentBeat += deltaBeat;
+    if (currentBeat >= 4) {
       currentBeat = 0;
       measures++;
       currentMeasure = measures % 4;
     }
 
     quarterBeat = floor(currentBeat);
+    lastTime = currentTime;
   }
 
   //is the beat syncopated according to subDivision

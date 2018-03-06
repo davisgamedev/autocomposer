@@ -3,8 +3,8 @@ class Voice{
   Oscil wave;
   float currentAmp = 0f;
   
-  float duration = 0;
-  float left
+  float duration;
+  float ellapsedDuration = 0f;
   
   float targetAmp;
   float velocityAmp;
@@ -23,17 +23,27 @@ class Voice{
   
   public void update(){
     if(needsUpdate){
-      if(velocityAmp > currentAmp && currentAmp + velocityAmp > targetAmp)
+      if(targetAmp > currentAmp && currentAmp + velocityAmp < targetAmp)
         incVolume(velocityAmp);
-      else if(velocityAmp < currentAmp && currentAmp - velocityAmp > targetAmp)
+      else if(targetAmp < currentAmp && currentAmp - velocityAmp > targetAmp)
         decVolume(velocityAmp);
       else needsUpdate = false;
+    }
+  }
+  
+  public void update(float deltaBeat){
+    update();
+    if(duration == 0) return;
+    ellapsedDuration += deltaBeat;
+    if(ellapsedDuration >= duration){
+      duration = 0;
     }
   }
   
   public void setVolume(float amp){
      wave.setAmplitude(amp); 
      currentAmp = amp;
+     needsUpdate = false;
   }
   
   public void decVolume(float amount){
@@ -62,15 +72,19 @@ class Voice{
       wave.setFrequency(Frequency.ofPitch(pitch));
   }
   
-  public void play(String pitch, float duration){
-    
+  public void play(String pitch, float length){
+    play(pitch);
+    ellapsedDuration = 0;
+    duration = length;
   }
   
-  public void rest(float duration){
-    
+  public void rest(float length, float decVelocity){
+    ellapsedDuration = 0;
+    duration = length;
+    targetAmp(0, decVelocity);
   }
   
   public boolean canPlay(){
-    
+    return duration == 0;
   }
 }

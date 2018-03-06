@@ -144,7 +144,7 @@ void draw()
   text("up : amp up", 10, 218);
   text("down : amp down", 10, 233);
   fill(255, 200, 0);
-  text(("current amp : " + String.format("%.2f", wave.currentAmp)), 10, 248);
+  text(("current amp : " + String.format("%.4f", wave.currentAmp)), 10, 248);
 
   //waveforms
   // \t doesn't work for some reason in processing
@@ -181,30 +181,24 @@ void update(){
       chordWaves.get(i).play(chords.get(Time.currentMeasure).get(i));
     }
     
-    if(isRest){
-        wave.decVolume(0.01);
-    }
-    if( frameCount - lastFrame < currentBeat * 60) return;
+    wave.update(Time.deltaBeat);
+    
+    if( !wave.canPlay() ) return;
     //two beats per 60 frames (120 bpm), one measure = 120 frames
     
-    lastFrame = frameCount;
-    
-    currentBeat = map(
+    float newBeat = map(
       random(0, 1),
       0,
       1,
       1/24,
       1
     );
-    if( random(0, 1) > 0.9){
-      isRest = true;
+    if( random(0, 1) > 0.4){
+      wave.rest(newBeat, 0.001);
       return;
     }
     
-    wave.setAmplitude(amp);
-    currentAmp = amp;
-    isRest = false;
-    
+    wave.setVolume(0.25);
     
     //currentPitch = chords.get(measure).get(;
     int currentChordNote = notes.indexOf(chords.get(Time.currentMeasure).get(floor(random(0, 4))));
@@ -212,7 +206,7 @@ void update(){
     if(currentChordNote < 0) currentChordNote = 0;
     currentChordNote %= notes.size();
     currentPitch = notes.get(currentChordNote);
-    wave.play(currentPitch);
+    wave.play(currentPitch, newBeat);
 }
 
 
@@ -222,33 +216,26 @@ void keyPressed()
 { 
     switch(keyCode){
       ////////set amp/////////
-      case UP:
-        amp += 0.01;
-        break;
-      case DOWN:
-        amp -= 0.01;
-        break;
-        
       default: break;
     }
     switch(key){
      case '1': 
-      wave.setWaveform( Waves.SINE );
+      wave.wave.setWaveform( Waves.SINE );
       break;
     case '2':
-      wave.setWaveform( Waves.TRIANGLE );
+      wave.wave.setWaveform( Waves.TRIANGLE );
       break;
     case '3':
-      wave.setWaveform( Waves.SAW );
+      wave.wave.setWaveform( Waves.SAW );
       break;
     case '4':
-      wave.setWaveform( Waves.SQUARE );
+      wave.wave.setWaveform( Waves.SQUARE );
       break; 
     case '5':
-      wave.setWaveform( Waves.QUARTERPULSE );
+      wave.wave.setWaveform( Waves.QUARTERPULSE );
       break;
     case '6':
-      wave.setWaveform( Waves.PHASOR );
+      wave.wave.setWaveform( Waves.PHASOR );
       break;
     }
   }
