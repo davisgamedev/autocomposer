@@ -190,7 +190,7 @@ void update(){
       random(0, 1),
       0,
       1,
-      1/24,
+      1/16,
       1
     );
     if( random(0, 1) > 0.4){
@@ -198,7 +198,7 @@ void update(){
       return;
     }
     
-    wave.setVolume(0.25);
+    wave.targetAmp(0.25, 0.01);
     
     //currentPitch = chords.get(measure).get(;
     int currentChordNote = notes.indexOf(chords.get(Time.currentMeasure).get(floor(random(0, 4))));

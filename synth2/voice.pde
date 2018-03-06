@@ -23,9 +23,9 @@ class Voice{
   
   public void update(){
     if(needsUpdate){
-      if(targetAmp > currentAmp && currentAmp + velocityAmp < targetAmp)
+      if(targetAmp >= currentAmp && currentAmp + velocityAmp <= targetAmp)
         incVolume(velocityAmp);
-      else if(targetAmp < currentAmp && currentAmp - velocityAmp > targetAmp)
+      else if(targetAmp <= currentAmp && currentAmp - velocityAmp >= targetAmp)
         decVolume(velocityAmp);
       else needsUpdate = false;
     }
