@@ -23,6 +23,13 @@ Time Time = new Time();
 
 String currentPitch = "--";
 
+enum GEN_MODES{
+   RANDOMJAZZ,
+   CHROMATIC,
+   DIATONIC
+}
+GEN_MODES currentGenMode = GEN_MODES.DIATONIC;
+
 String[] modeNames = new String[]{
   "Ionian",
   "Dorian",
@@ -57,6 +64,8 @@ String[] pitches = new String[]{
      "G#"
 };
 
+ArrayList<String> chromats;
+
 ArrayList<String> notes;
 ArrayList<ArrayList<String>> chords;
 int mode;
@@ -83,33 +92,7 @@ void setup()
     chordWaves.add(new Voice(out, Waves.SINE, 0.2));
   }
   
-  notes = new ArrayList();
-  
-  mode = floor(random(0, modes.length));
-  scale = floor(random(0, pitches.length));
-  
-  for(int o = 2; o < 5; o++){
-    int n = scale;
-    for(int m = 0; m < modes[mode].length; m++){
-      notes.add(
-        pitches[n] + o
-      );
-      n += modes[mode][m];
-      n %= pitches.length; //check if last interval is correct, might be missing one
-    }
-  }
-  
-  chords = new ArrayList();
-  for(int i = 0; i < 4; i++){
-     chords.add(new ArrayList());
-     while(chords.get(i).size() < 4){
-       int index = floor(random(8, notes.size()));
-       String note = notes.get(index);
-       if(!chords.get(i).contains(note)){
-         chords.get(i).add(note);
-       }
-     }
-  }
+  generate();
 }
 
 
@@ -141,10 +124,10 @@ void draw()
   }
   
   //volume
-  text("up : amp up", 10, 218);
-  text("down : amp down", 10, 233);
+  text("enter : regenerate", 10, 218);
+  text("shift : change gen mode", 10, 233);
   fill(255, 200, 0);
-  text(("current amp : " + String.format("%.4f", wave.currentAmp)), 10, 248);
+  text("current gen mode: " + currentGenMode, 10, 248);
 
   //waveforms
   // \t doesn't work for some reason in processing
@@ -209,34 +192,60 @@ void update(){
     wave.play(currentPitch, newBeat);
 }
 
+void incrementEnum(){
+  currentGenMode = GEN_MODES.values()[(currentGenMode.ordinal()+1)%GEN_MODES.values().length];
+}
 
+void generate(){
+  notes = new ArrayList();
+  
+  mode = floor(random(0, modes.length));
+  scale = floor(random(0, pitches.length));
+  
+  for(int o = 2; o < 5; o++){
+    int n = scale;
+    for(int m = 0; m < modes[mode].length; m++){
+      notes.add(
+        pitches[n] + o
+      );
+      n += modes[mode][m];
+      n %= pitches.length; //check if last interval is correct, might be missing one
+    }
+  }
+  
+  chromats = new ArrayList();
+  for(int o = 2; o < 5; o++){
+    for(int p = 0; p < pitches.length; p++){
+      chromats.add(pitches[p] + o);
+    }
+  }
+  
+  chords = new ArrayList();
+  switch(currentGenMode){
+    case RANDOMJAZZ:
+      doRandomChords();
+      break;
+     case DIATONIC:
+      doBaseChordMod(notes);
+      break;
+     case CHROMATIC:
+      doBaseChordMod(chromats);
+      break;
+  }
+}
 
 // called every time user presses a key.  Only care about '1' - '5'
 void keyPressed()
 { 
     switch(keyCode){
       ////////set amp/////////
+      case(ENTER):
+        generate();
+      break;
+      case(SHIFT):
+        incrementEnum();
+        break;
       default: break;
-    }
-    switch(key){
-     case '1': 
-      wave.wave.setWaveform( Waves.SINE );
-      break;
-    case '2':
-      wave.wave.setWaveform( Waves.TRIANGLE );
-      break;
-    case '3':
-      wave.wave.setWaveform( Waves.SAW );
-      break;
-    case '4':
-      wave.wave.setWaveform( Waves.SQUARE );
-      break; 
-    case '5':
-      wave.wave.setWaveform( Waves.QUARTERPULSE );
-      break;
-    case '6':
-      wave.wave.setWaveform( Waves.PHASOR );
-      break;
     }
   }
   
