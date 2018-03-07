@@ -26,6 +26,7 @@ String currentPitch = "--";
 enum GEN_MODES{
    RANDOMJAZZ,
    CHROMATIC,
+   SEMICHROMATIC,
    DIATONIC
 }
 GEN_MODES currentGenMode = GEN_MODES.DIATONIC;
@@ -89,7 +90,7 @@ void setup()
   
   chordWaves = new ArrayList();
   for(int i = 0; i < 4; i++){
-    chordWaves.add(new Voice(out, Waves.SINE, 0.2));
+    chordWaves.add(new Voice(out, Waves.SINE, 0.1));
   }
   
   generate();
@@ -226,11 +227,14 @@ void generate(){
       doRandomChords();
       break;
      case DIATONIC:
-      doBaseChordMod(notes);
+      doDiatonicChordMod();
       break;
      case CHROMATIC:
-      doBaseChordMod(chromats);
+      doChromaticChordMod();
       break;
+     case SEMICHROMATIC:
+       doSemiChromaticChordMod();
+       break;
   }
 }
 
