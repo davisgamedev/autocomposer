@@ -19,6 +19,7 @@ AudioOutput out;
 ArrayList<Voice> chordWaves;
 Voice wave;
 
+Staff staff = new Staff();
 Time Time = new Time();
 
 String currentPitch = "--";
@@ -76,8 +77,8 @@ void setup()
 {
   frameRate(60);
   
-  // Width is the number of samples in the sample table
-  size(512, 300);
+  // width/2 is the number of samples in the sample table
+  size(1024, 300);
   
   // Magic words to create an object for the audio system
   minim = new Minim(this);
@@ -107,10 +108,10 @@ void draw()
   // Draw the waveform shape we are using in the oscillator
   stroke( 102, 255, 140 );  // Green
   strokeWeight(4);
-  for( int i = 0; i < width-1; ++i )
+  for( int i = 0; i < width/2-1; ++i )
   {
     point(i,
-      200/2 - (200*0.49)*wave.wave.getWaveform().value((float)i/width));
+      200/2 - (200*0.49)*wave.wave.getWaveform().value((float)i/width/2));
   }
   
   
@@ -118,7 +119,7 @@ void draw()
   stroke(140, 102, 255);              // purple
   strokeWeight(1);  
   // Draw the waveform of the output in stereo
-  for(int i = 0; i < out.bufferSize() - 1; i++)
+  for(int i = 0; i < out.bufferSize()/2 - 1; i += 1)
   {
     line(i,  50-out.left.get(i)*50,  i+1,  50 - out.left.get(i+1)*50);
     line(i, 150-out.right.get(i)*50, i+1, 150 - out.right.get(i+1)*50);
@@ -137,24 +138,27 @@ void draw()
   text("4 : square   5 : quarter     6 : phasor", 10, 288);
 
   fill(200, 0, 255);
-  text("Scale: " + pitches[scale] + ", Mode: " + modeNames[mode], width/2, 218);
+  text("Scale: " + pitches[scale] + ", Mode: " + modeNames[mode], width/2/2, 218);
   fill(0, 100, 255);
   for(int i = 7; i < 15; i++){
     int gap = (i-7) * 30;
-    text(notes.get(i), width/2 + gap, 233);
+    text(notes.get(i), width/2/2 + gap, 233);
   }
   
   fill(255, 100, 0);
-  text("Chord: ", width/2, 248);
+  text("Chord: ", width/2/2, 248);
   for(int i = 0; i < chords.get(Time.currentMeasure).size(); i++){
       String n = chords.get(Time.currentMeasure).get(i);
-      text(n, 50 + width/2 + (30 * i), 248); 
+      text(n, 50 + width/2/2 + (30 * i), 248); 
   }
   
   fill(0, 255, 255);
-  text(("Current note: " + currentPitch), width/2, 263);
+  text(("Current note: " + currentPitch), width/2/2, 263);
   
+  stroke(255);
+  line(width/2, 0, width/2, height);
   
+  staff.drawStaff();
 }
 
 void update(){
